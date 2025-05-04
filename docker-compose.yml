@@ -1,0 +1,16 @@
+---
+version: "3.2"
+
+services:
+  db:
+    container_name: eurovision-db
+    image: docker-elab.uk.aswatson.net/postgres:17.2
+    restart: no
+    ports:
+      - "5435:5432"
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: eurovision
+      POSTGRES_USER: eurovision
+      POSTGRES_DB: eurovision

@@ -1,0 +1,102 @@
+package com.flamedavid.eurovision.services;
+
+import com.flamedavid.eurovision.dtos.RegisterUserDTO;
+import com.flamedavid.eurovision.dtos.UserSummaryDTO;
+import com.flamedavid.eurovision.entities.User;
+import com.flamedavid.eurovision.enums.CountryEnum;
+import com.flamedavid.eurovision.exceptions.BadRequestException;
+import com.flamedavid.eurovision.exceptions.NotFoundException;
+import com.flamedavid.eurovision.repositories.UserRepository;
+import com.flamedavid.eurovision.repositories.VoteStatusRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final VoteStatusRepository voteStatusRepository;
+
+    @Value("${admin.username}")
+    private String adminUsername;
+
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public void registerNewUser(RegisterUserDTO registerUserDTO) {
+        var countryEnum = CountryEnum.fromString(registerUserDTO.getAssignedCountry());
+
+        //Controlla che nessuna categoria sia aperta per le votazioni
+        voteStatusRepository.findByOpenTrue()
+            .ifPresent(voteStatus -> {
+                throw new BadRequestException("Cannot register a new user while voting is open");
+            });
+        //Verifica che il paese non sia già assegnato
+        if (userRepository.existsByAssignedCountry(countryEnum)) {
+            throw new BadRequestException("Country already assigned to another user");
+        }
+        // Verifica che l'username non sia già in uso
+        if (userRepository.existsByUsername(registerUserDTO.getUsername())) {
+            throw new BadRequestException("User with this username already exists");
+        }
+        if (adminUsername.equals(registerUserDTO.getUsername())) {
+            throw new BadRequestException("Cannot register with the admin username");
+        }
+
+        // Crea il nuovo utente
+        User newUser = new User();
+        newUser.setUsername(registerUserDTO.getUsername());
+        newUser.setEmail(registerUserDTO.getEmail());
+        newUser.setPassword(passwordEncoder.encode(registerUserDTO.getPassword())); // Cripta la password
+        newUser.setAssignedCountry(countryEnum);
+
+        // Salva il nuovo utente
+        userRepository.save(newUser);
+    }
+
+    public void deleteUserByUsername(String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            throw new NotFoundException("User not found: " + username);
+        }
+
+        User user = userOpt.get();
+        if (user.isAdmin()) {
+            throw new BadRequestException("Cannot delete an admin user.");
+        }
+
+        userRepository.delete(user);
+    }
+
+    public void overwriteUserPassword(String username, String newPassword) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            throw new NotFoundException("User not found: " + username);
+        }
+
+        User user = userOpt.get();
+        if (user.isAdmin()) {
+            throw new BadRequestException("Cannot change the password of an admin user.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword)); // Cripta la nuova password
+        userRepository.save(user);
+    }
+
+    public List<UserSummaryDTO> getAllNonAdminUsers() {
+        return userRepository.findAllByAdminFalse()
+            .stream()
+            .map(user -> new UserSummaryDTO(
+                user.getUsername(),
+                user.getAssignedCountry()
+            )).toList();
+    }
+}
