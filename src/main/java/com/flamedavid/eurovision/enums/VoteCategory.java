@@ -4,16 +4,17 @@ import lombok.Getter;
 
 @Getter
 public enum VoteCategory {
-    EUROVISION("Eurovision"),
-    BEST_FOOD("Best Food"),
-    BEST_GUEST_OUTFIT("Best Guest Outfit"),
-    BONO("Il più bono"),
-    BONA("La più bona"),
-    BEST_SINGER_OUTFIT("Best Singer Outfit");
+    EUROVISION("Classifica Eurovision"),
+    BEST_FOOD("Miglior cibo"),
+    BEST_GUEST_OUTFIT("Miglior Outfit - Cosplay"),
+    BONO("Il più bello"),
+    BONA("La più bella"),
+    BEST_SINGER_OUTFIT("Miglior Outfit - Cantante"),
+    WINNER("Chi vince?");
 
-    private final String categoryName;
+    private final String categoryLabel;
 
-    VoteCategory(String categoryName) {
-        this.categoryName = categoryName;
+    VoteCategory(String categoryLabel) {
+        this.categoryLabel = categoryLabel;
     }
 }

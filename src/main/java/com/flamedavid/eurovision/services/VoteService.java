@@ -43,10 +43,9 @@ public class VoteService {
     public void revealVote(VoteCategory category, String username, int points) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new NotFoundException("User not found"));
-        UserVote userVote = userVoteRepository.findByUserAndCategory(user, category);
-        if (userVote == null) {
-            throw new NotFoundException("Vote not found");
-        }
+        UserVote userVote = userVoteRepository.findByUserAndCategory(user, category)
+            .orElseThrow(() -> new NotFoundException("Vote not found"));
+
         userVote.getVotes().stream()
             .filter(vote -> vote.getPoints() == points)
             .findAny()
@@ -96,7 +95,7 @@ public class VoteService {
         List<Integer> expectedPoints = switch (category) {
             case EUROVISION -> List.of(12, 10, 8, 7, 6, 5, 4, 3, 2, 1);
             case BEST_FOOD, BEST_GUEST_OUTFIT -> List.of(12, 10, 8, 7, 6);
-            case BONO, BONA, BEST_SINGER_OUTFIT -> List.of(12);
+            case BONO, BONA, BEST_SINGER_OUTFIT, WINNER -> List.of(12);
         };
 
         if (dto.votes().size() != expectedPoints.size()) {
@@ -119,13 +118,34 @@ public class VoteService {
                 if (vote.country().equals(user.getAssignedCountry())) {
                     throw new BadRequestException("You cannot vote your assigned country for this category.");
                 }
+            }
 
-                // Controlla se la nazione è tra quelle ammesse
-                if (category == VoteCategory.BEST_FOOD && !countryConfigs.getBestFood().contains(vote.country())) {
-                    throw new BadRequestException("The requested country cannot be voted for BEST_FOOD");
+            // Controlla se la nazione è tra quelle ammesse
+            switch(category) {
+                case BEST_FOOD -> {
+                    if (!countryConfigs.getBestFood().contains(vote.country())) {
+                        throw new BadRequestException("The requested country cannot be voted for BEST_FOOD");
+                    }
                 }
-                if (category == VoteCategory.BEST_GUEST_OUTFIT && !countryConfigs.getBestGuestOutfit().contains(vote.country())) {
-                    throw new BadRequestException("The requested country cannot be voted for BEST_GUEST_OUTFIT");
+                case BEST_GUEST_OUTFIT -> {
+                    if (!countryConfigs.getBestGuestOutfit().contains(vote.country())) {
+                        throw new BadRequestException("The requested country cannot be voted for BEST_GUEST_OUTFIT");
+                    }
+                }
+                case BONO -> {
+                    if (!countryConfigs.getBono().contains(vote.country())) {
+                        throw new BadRequestException("The requested country cannot be voted for BONO");
+                    }
+                }
+                case BONA -> {
+                    if (!countryConfigs.getBona().contains(vote.country())) {
+                        throw new BadRequestException("The requested country cannot be voted for BONA");
+                    }
+                }
+                default -> {
+                    if (!countryConfigs.getFinalists().contains(vote.country())) {
+                        throw new BadRequestException("The requested country cannot be voted for EUROVISION");
+                    }
                 }
             }
         }
@@ -153,35 +173,33 @@ public class VoteService {
             .orElseThrow(() -> new NotFoundException("User not found"));
         List<CountryEnum> response;
 
-        if (category == VoteCategory.BEST_FOOD) {
-            response = countryConfigs.getBestFood().stream()
+        switch(category) {
+            case BEST_FOOD -> response = countryConfigs.getBestFood().stream()
                 .filter(countryEnum -> !countryEnum.equals(user.getAssignedCountry()))
                 .toList();
-        } else if (category == VoteCategory.BEST_GUEST_OUTFIT) {
-            response = countryConfigs.getBestGuestOutfit().stream()
+            case BEST_GUEST_OUTFIT -> response = countryConfigs.getBestGuestOutfit().stream()
                 .filter(countryEnum -> !countryEnum.equals(user.getAssignedCountry()))
                 .toList();
-        } else {
-            response = Arrays.stream(CountryEnum.values()).toList();
+            case BONO -> response = countryConfigs.getBono();
+            case BONA -> response = countryConfigs.getBona();
+            default -> response = countryConfigs.getFinalists();
         }
-
         return response;
     }
 
     public VoteCategoryDTO getOpenCategory() {
         return voteStatusRepository.findByOpenTrue()
             .map(VoteStatus::getCategory)
-            .map(cat -> new VoteCategoryDTO(cat.name(), cat.getCategoryName()))
+            .map(cat -> new VoteCategoryDTO(cat.name(), cat.getCategoryLabel()))
             .orElseThrow(() -> new NotFoundException("No open category found"));
     }
 
     public UserVotingResultsDTO getUserVotingResults(String username, VoteCategory category) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new NotFoundException("User not found"));
-        UserVote userVote = userVoteRepository.findByUserAndCategory(user, category);
-        if (userVote == null) {
-            throw new NotFoundException("Vote not found");
-        }
+        UserVote userVote = userVoteRepository.findByUserAndCategory(user, category)
+            .orElseThrow(() -> new NotFoundException("Vote not found"));
+
         List<SingleVote> votes = userVote.getVotes();
         List<UserCountryResultDTO> sortedResults = votes.stream()
             .map(vote -> new UserCountryResultDTO(vote.getCountry(), vote.getPoints(), vote.isRevealed()))
@@ -189,7 +207,7 @@ public class VoteService {
         return new UserVotingResultsDTO(username, category, sortedResults);
     }
 
-    public VotingResultsDTO calculateResults(VoteCategory category) {
+    public VotingResultsDTO calculateResults(VoteCategory category, boolean showFirstVote, int limit) {
         int nonAdminUsersNum = userRepository.countByAdminFalse();
         List<UserVote> userVotes = userVoteRepository.findAllByCategory(category);
         boolean completed = userVotes.size() == nonAdminUsersNum;
@@ -212,7 +230,11 @@ public class VoteService {
         List<CountryResultDTO> sortedResults = resultsMap.entrySet().stream()
             .map(entry -> new CountryResultDTO(entry.getKey(), entry.getValue()))
             .sorted(Comparator.comparing(CountryResultDTO::points).reversed())
+            .limit(limit)
             .toList();
+        if (!showFirstVote) {
+            sortedResults = sortedResults.subList(1, sortedResults.size());
+        }
         return new VotingResultsDTO(completed, category, sortedResults);
     }
 

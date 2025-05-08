@@ -11,6 +11,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "countries")
 @Data
 public class CountryConfigs {
+    private List<CountryEnum> finalists;
     private List<CountryEnum> bestFood;
     private List<CountryEnum> bestGuestOutfit;
+    private List<CountryEnum> bono;
+    private List<CountryEnum> bona;
 }

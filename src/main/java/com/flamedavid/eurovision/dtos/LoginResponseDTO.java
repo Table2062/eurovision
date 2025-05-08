@@ -1,3 +1,3 @@
 package com.flamedavid.eurovision.dtos;
 
-public record LoginResponseDTO(String token) {}
+public record LoginResponseDTO(String token, boolean isAdmin) {}

@@ -1,13 +1,17 @@
 package com.flamedavid.eurovision.services;
 
+import com.flamedavid.eurovision.dtos.LoginRequestDTO;
+import com.flamedavid.eurovision.dtos.LoginResponseDTO;
 import com.flamedavid.eurovision.dtos.RegisterUserDTO;
 import com.flamedavid.eurovision.dtos.UserSummaryDTO;
 import com.flamedavid.eurovision.entities.User;
 import com.flamedavid.eurovision.enums.CountryEnum;
 import com.flamedavid.eurovision.exceptions.BadRequestException;
 import com.flamedavid.eurovision.exceptions.NotFoundException;
+import com.flamedavid.eurovision.exceptions.UnauthorizedException;
 import com.flamedavid.eurovision.repositories.UserRepository;
 import com.flamedavid.eurovision.repositories.VoteStatusRepository;
+import com.flamedavid.eurovision.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,12 +27,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final VoteStatusRepository voteStatusRepository;
+    private final JwtUtil jwtUtil;
 
     @Value("${admin.username}")
     private String adminUsername;
 
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+        String errorMessage = "Wrong login!";
+        var user = getUserByUsername(loginRequestDTO.username())
+            .orElseThrow(() -> new UnauthorizedException(errorMessage));
+        if (!passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
+            throw new UnauthorizedException(errorMessage);
+        }
+        String token = jwtUtil.generateToken(user.getId());
+        return new LoginResponseDTO(token, user.isAdmin());
     }
 
     public void registerNewUser(RegisterUserDTO registerUserDTO) {
