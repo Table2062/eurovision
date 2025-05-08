@@ -46,7 +46,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Verifica la firma e scadenza del token
         if (!jwtUtil.isTokenValid(token, user)) {
-            new UnauthorizedException("Token non valido");
+            throw new UnauthorizedException("Token non valido");
         }
 
         // Autentica l’utente

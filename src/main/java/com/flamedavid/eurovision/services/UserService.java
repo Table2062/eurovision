@@ -55,16 +55,16 @@ public class UserService {
             .ifPresent(voteStatus -> {
                 throw new BadRequestException("Cannot register a new user while voting is open");
             });
-        //Verifica che il paese non sia già assegnato
-        if (userRepository.existsByAssignedCountry(countryEnum)) {
-            throw new BadRequestException("Country already assigned to another user");
-        }
         // Verifica che l'username non sia già in uso
         if (userRepository.existsByUsername(registerUserDTO.getUsername())) {
             throw new BadRequestException("User with this username already exists");
         }
         if (adminUsername.equals(registerUserDTO.getUsername())) {
             throw new BadRequestException("Cannot register with the admin username");
+        }
+        //Verifica che il paese non sia già assegnato
+        if (userRepository.existsByAssignedCountry(countryEnum)) {
+            throw new BadRequestException("Country already assigned to another user");
         }
 
         // Crea il nuovo utente
