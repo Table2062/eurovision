@@ -38,7 +38,8 @@ public class AuthController {
     @GetMapping("/all-countries")
     public ResponseEntity<CountryListResponseDTO> getAllCountries() {
         var countries = Arrays.stream(CountryEnum.values())
-            .map(countryEnum -> new CountryDTO(countryEnum.name(), countryEnum.getCountryName()))
+            .map(countryEnum -> new CountryDTO(countryEnum.name(), countryEnum.getLabel(),
+                countryEnum.getCountryCode()))
             .toList();
         return ResponseEntity.ok(new CountryListResponseDTO(countries));
     }

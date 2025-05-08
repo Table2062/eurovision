@@ -43,8 +43,8 @@ public class UserService {
         if (!passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
             throw new UnauthorizedException(errorMessage);
         }
-        String token = jwtUtil.generateToken(user.getId());
-        return new LoginResponseDTO(token, user.isAdmin());
+        String token = jwtUtil.generateToken(user.getId(), user.isAdmin());
+        return new LoginResponseDTO(token);
     }
 
     public void registerNewUser(RegisterUserDTO registerUserDTO) {

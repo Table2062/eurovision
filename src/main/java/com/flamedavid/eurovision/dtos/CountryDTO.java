@@ -1,4 +1,4 @@
 package com.flamedavid.eurovision.dtos;
 
-public record CountryDTO(String code, String label) {
+public record CountryDTO(String name, String label, String isoCode) {
 }

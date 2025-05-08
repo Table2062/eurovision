@@ -4,6 +4,8 @@ import com.flamedavid.eurovision.exceptions.NotFoundException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Locale;
+
 @Getter
 @RequiredArgsConstructor
 public enum CountryEnum {
@@ -45,19 +47,29 @@ public enum CountryEnum {
     UKRAINE("Ukraine"),
     UNITED_KINGDOM("United Kingdom");
 
-    private final String countryName;
+    private final String label;
 
     @Override
     public String toString() {
-        return countryName;
+        return label;
     }
 
     public static CountryEnum fromString(String countryName) {
         for (CountryEnum country : CountryEnum.values()) {
-            if (country.getCountryName().equalsIgnoreCase(countryName)) {
+            if (country.getLabel().equalsIgnoreCase(countryName)) {
                 return country;
             }
         }
         throw new NotFoundException("No constant with country name " + countryName + " found");
+    }
+
+    public String getCountryCode() {
+        for (String iso : Locale.getISOCountries()) {
+            Locale locale = new Locale("", iso);
+            if (locale.getDisplayCountry(Locale.ENGLISH).equalsIgnoreCase(label)) {
+                return iso.toUpperCase();
+            }
+        }
+        return name().substring(0,3).toUpperCase();
     }
 }

@@ -32,12 +32,13 @@ public class JwtUtil {
         signingKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(UUID userId) {
+    public String generateToken(UUID userId, boolean isAdmin) {
         return Jwts.builder()
             .setSubject(userId.toString())
             .setIssuedAt(new Date())
             .setExpiration(Date.from(Instant.now().plus(Duration.ofHours(expirationHours))))
             .signWith(signingKey, SignatureAlgorithm.HS256)
+            .claim("isAdmin", isAdmin)
             .compact();
     }
 
