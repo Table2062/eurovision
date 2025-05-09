@@ -1,6 +1,8 @@
 package com.flamedavid.eurovision.services;
 
 import com.flamedavid.eurovision.configurations.CountryConfigs;
+import com.flamedavid.eurovision.dtos.CountryDTO;
+import com.flamedavid.eurovision.dtos.CountryListResponseDTO;
 import com.flamedavid.eurovision.dtos.CountryResultDTO;
 import com.flamedavid.eurovision.dtos.UserCountryResultDTO;
 import com.flamedavid.eurovision.dtos.UserVotingResultsDTO;
@@ -21,14 +23,16 @@ import com.flamedavid.eurovision.repositories.UserRepository;
 import com.flamedavid.eurovision.repositories.UserVoteRepository;
 import com.flamedavid.eurovision.repositories.VoteStatusRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -91,14 +95,7 @@ public class VoteService {
         if (userVoteRepository.existsByUserAndCategory(user, category))
             throw new BadRequestException("Already voted");
 
-        // 4. Regole per punti per categoria
-        List<Integer> expectedPoints = switch (category) {
-            case EUROVISION -> List.of(12, 10, 8, 7, 6, 5, 4, 3, 2, 1);
-            case BEST_FOOD, BEST_GUEST_OUTFIT -> List.of(12, 10, 8, 7, 6);
-            case BONO, BONA, BEST_SINGER_OUTFIT, WINNER -> List.of(12);
-        };
-
-        if (dto.votes().size() != expectedPoints.size()) {
+        if (dto.votes().size() != category.getVotePoints().size()) {
             throw new BadRequestException("Wrong number of positions for the requested category");
         }
 
@@ -106,47 +103,19 @@ public class VoteService {
         var usedPoints = new HashSet<Integer>();
 
         for (var vote : dto.votes()) {
-            if (!expectedPoints.contains(vote.points()))
+            if (!category.getVotePoints().contains(vote.points()))
                 throw new BadRequestException("Invalid points: " + vote.points());
             if (!usedPoints.add(vote.points()))
                 throw new BadRequestException("Each position can be defined only one time");
             if (!usedCountries.add(vote.country()))
                 throw new BadRequestException("Each country can be voted only once");
-
-            if ((category == VoteCategory.BEST_FOOD || category == VoteCategory.BEST_GUEST_OUTFIT)) {
-                // Autovoto vietato per alcune categorie
-                if (vote.country().equals(user.getAssignedCountry())) {
-                    throw new BadRequestException("You cannot vote your assigned country for this category.");
-                }
+            if ((category == VoteCategory.BEST_FOOD || category == VoteCategory.BEST_GUEST_OUTFIT) &&
+                vote.country().equals(user.getAssignedCountry())) {
+                throw new BadRequestException("You cannot vote your assigned country for this category.");
             }
-
             // Controlla se la nazione è tra quelle ammesse
-            switch(category) {
-                case BEST_FOOD -> {
-                    if (!countryConfigs.getBestFood().contains(vote.country())) {
-                        throw new BadRequestException("The requested country cannot be voted for BEST_FOOD");
-                    }
-                }
-                case BEST_GUEST_OUTFIT -> {
-                    if (!countryConfigs.getBestGuestOutfit().contains(vote.country())) {
-                        throw new BadRequestException("The requested country cannot be voted for BEST_GUEST_OUTFIT");
-                    }
-                }
-                case BONO -> {
-                    if (!countryConfigs.getBono().contains(vote.country())) {
-                        throw new BadRequestException("The requested country cannot be voted for BONO");
-                    }
-                }
-                case BONA -> {
-                    if (!countryConfigs.getBona().contains(vote.country())) {
-                        throw new BadRequestException("The requested country cannot be voted for BONA");
-                    }
-                }
-                default -> {
-                    if (!countryConfigs.getFinalists().contains(vote.country())) {
-                        throw new BadRequestException("The requested country cannot be voted for EUROVISION");
-                    }
-                }
+            if (!getAvailableCountriesForCategory(category).contains(vote.country())) {
+                throw new BadRequestException("The requested country cannot be voted for %s".formatted(category));
             }
         }
 
@@ -168,30 +137,14 @@ public class VoteService {
         userVoteRepository.save(userVote);
     }
 
-    public List<CountryEnum> getAvailableCountriesForCategory(VoteCategory category, String username) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new NotFoundException("User not found"));
-        List<CountryEnum> response;
-
-        switch(category) {
-            case BEST_FOOD -> response = countryConfigs.getBestFood().stream()
-                .filter(countryEnum -> !countryEnum.equals(user.getAssignedCountry()))
-                .toList();
-            case BEST_GUEST_OUTFIT -> response = countryConfigs.getBestGuestOutfit().stream()
-                .filter(countryEnum -> !countryEnum.equals(user.getAssignedCountry()))
-                .toList();
-            case BONO -> response = countryConfigs.getBono();
-            case BONA -> response = countryConfigs.getBona();
-            default -> response = countryConfigs.getFinalists();
-        }
-        return response;
-    }
-
-    public VoteCategoryDTO getOpenCategory() {
-        return voteStatusRepository.findByOpenTrue()
+    public VoteCategoryDTO getOpenCategory(User user) {
+        var voteCategory = voteStatusRepository.findByOpenTrue()
             .map(VoteStatus::getCategory)
-            .map(cat -> new VoteCategoryDTO(cat.name(), cat.getCategoryLabel()))
-            .orElseThrow(() -> new NotFoundException("No open category found"));
+            .orElseThrow(() -> new NotFoundException("No open category found!"));
+        if (userVoteRepository.existsByUserAndCategory(user, voteCategory)) {
+            throw new BadRequestException("You have already voted for the current category!");
+        }
+        return new VoteCategoryDTO(voteCategory.name(), voteCategory.getLabel(), voteCategory.getVotePoints());
     }
 
     public UserVotingResultsDTO getUserVotingResults(String username, VoteCategory category) {
@@ -239,15 +192,51 @@ public class VoteService {
     }
 
     private List<CountryEnum> getAvailableCountriesForCategory(VoteCategory category) {
-        List<CountryEnum> response;
-        if (category == VoteCategory.BEST_FOOD) {
-            response = countryConfigs.getBestFood();
-        } else if (category == VoteCategory.BEST_GUEST_OUTFIT) {
-            response = countryConfigs.getBestGuestOutfit();
-        } else {
-            response = Arrays.stream(CountryEnum.values()).toList();
+        Stream<CountryDTO> countryEnumsStream;
+        switch(category) {
+            case BEST_FOOD -> countryEnumsStream = countryConfigs.getBestFood().stream();
+            case BEST_GUEST_OUTFIT -> countryEnumsStream = countryConfigs.getBestGuestOutfit().stream();
+            case BONO -> countryEnumsStream = countryConfigs.getBono().stream();
+            case BONA -> countryEnumsStream = countryConfigs.getBona().stream();
+            default -> countryEnumsStream = countryConfigs.getFinalists().stream();
         }
-        return response;
+        return countryEnumsStream.map(CountryDTO::name).toList();
+    }
+
+    public CountryListResponseDTO getAvailableCountriesForCategory(VoteCategory category, String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found"));
+        Stream<CountryDTO> countryEnumsStream;
+
+        switch(category) {
+            case BEST_FOOD -> countryEnumsStream = countryConfigs.getBestFood().stream()
+                .filter(countryDTO -> !countryDTO.name().equals(user.getAssignedCountry()));
+            case BEST_GUEST_OUTFIT -> countryEnumsStream = countryConfigs.getBestGuestOutfit().stream()
+                .filter(countryDTO -> !countryDTO.name().equals(user.getAssignedCountry()));
+            case BONO -> countryEnumsStream = countryConfigs.getBono().stream();
+            case BONA -> countryEnumsStream = countryConfigs.getBona().stream();
+            default -> countryEnumsStream = countryConfigs.getFinalists().stream();
+        }
+
+        var countryUserMap = userRepository.findAllByAdminFalse().stream()
+            .map(u -> Pair.of(u.getAssignedCountry(), u.getUsername()))
+            .collect(Collectors.toMap(
+                Pair::getFirst,
+                Pair::getSecond,
+                (existing, replacement) -> existing
+            ));
+
+        var countries = countryEnumsStream.map(dto -> {
+                String assignedGuest = null;
+                switch (category) {
+                    case BEST_FOOD, BEST_GUEST_OUTFIT -> assignedGuest = countryUserMap.get(dto.name());
+                }
+                return new CountryDTO(dto.name(), dto.name().getLabel(),
+                    dto.name().getCountryCode(), dto.participant(), assignedGuest);
+            })
+            .toList();
+
+        return new CountryListResponseDTO(countries);
     }
 
     public List<String> getUsersThatVoted(VoteCategory category) {

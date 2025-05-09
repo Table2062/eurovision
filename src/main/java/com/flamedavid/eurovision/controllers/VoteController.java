@@ -1,10 +1,10 @@
 package com.flamedavid.eurovision.controllers;
 
+import com.flamedavid.eurovision.dtos.CountryListResponseDTO;
 import com.flamedavid.eurovision.dtos.MessageDTO;
 import com.flamedavid.eurovision.dtos.VoteCategoryDTO;
 import com.flamedavid.eurovision.dtos.VoteRequestDTO;
 import com.flamedavid.eurovision.entities.User;
-import com.flamedavid.eurovision.enums.CountryEnum;
 import com.flamedavid.eurovision.enums.VoteCategory;
 import com.flamedavid.eurovision.services.VoteService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/votes")
@@ -37,16 +35,18 @@ public class VoteController {
     }
 
     @GetMapping("/available-countries/{category}")
-    public ResponseEntity<List<CountryEnum>> getAvailableCountriesForCategory(
+    public ResponseEntity<CountryListResponseDTO> getAvailableCountriesForCategory(
         @AuthenticationPrincipal User user,
         @PathVariable VoteCategory category
     ) {
-        List<CountryEnum> countries = voteService.getAvailableCountriesForCategory(category, user.getUsername());
+        CountryListResponseDTO countries = voteService.getAvailableCountriesForCategory(category, user.getUsername());
         return ResponseEntity.ok(countries);
     }
 
     @GetMapping("/open-category")
-    public ResponseEntity<VoteCategoryDTO> getOpenCategory() {
-        return ResponseEntity.ok(voteService.getOpenCategory());
+    public ResponseEntity<VoteCategoryDTO> getOpenCategory(
+        @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(voteService.getOpenCategory(user));
     }
 }

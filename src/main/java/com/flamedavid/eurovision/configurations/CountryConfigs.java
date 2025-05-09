@@ -1,6 +1,6 @@
 package com.flamedavid.eurovision.configurations;
 
-import com.flamedavid.eurovision.enums.CountryEnum;
+import com.flamedavid.eurovision.dtos.CountryDTO;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -11,9 +11,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "countries")
 @Data
 public class CountryConfigs {
-    private List<CountryEnum> finalists;
-    private List<CountryEnum> bestFood;
-    private List<CountryEnum> bestGuestOutfit;
-    private List<CountryEnum> bono;
-    private List<CountryEnum> bona;
+    private List<CountryDTO> finalists;
+    private List<CountryDTO> bestFood;
+    private List<CountryDTO> bestGuestOutfit;
+    private List<CountryDTO> bono;
+    private List<CountryDTO> bona;
 }

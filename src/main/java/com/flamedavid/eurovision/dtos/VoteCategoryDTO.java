@@ -1,4 +1,6 @@
 package com.flamedavid.eurovision.dtos;
 
-public record VoteCategoryDTO(String code, String name) {
+import java.util.List;
+
+public record VoteCategoryDTO(String name, String label, List<Integer> votePoints) {
 }

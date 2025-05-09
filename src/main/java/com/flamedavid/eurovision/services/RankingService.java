@@ -31,14 +31,16 @@ public class RankingService {
             .countryResults().get(0).countryEnum();
         var winnerCountry = voteService.calculateResults(VoteCategory.WINNER, true, 1)
             .countryResults().get(0).countryEnum();
+        var bestSingerOutfit = voteService.calculateResults(VoteCategory.BEST_SINGER_OUTFIT, true, 1)
+            .countryResults().get(0).countryEnum();
         var bestFoodResults = voteService.calculateResults(VoteCategory.BEST_FOOD, true, 5)
             .countryResults().stream().map(CountryResultDTO::countryEnum).toList();
         var bestGuestOutfitResults = voteService.calculateResults(VoteCategory.BEST_GUEST_OUTFIT, true, 5)
             .countryResults().stream().map(CountryResultDTO::countryEnum).toList();
 
         return users.stream()
-            .map(user -> computeFinalScore(user, bonoCountry, bonaCountry, winnerCountry, bestFoodResults,
-                bestGuestOutfitResults, officialRankingTop10))
+            .map(user -> computeFinalScore(user, bonoCountry, bonaCountry, winnerCountry,
+                bestSingerOutfit, bestFoodResults, bestGuestOutfitResults, officialRankingTop10))
             .sorted(Comparator.comparingInt(FinalScoreDTO::totalScore).reversed())
             .limit(limit)
             .toList();
@@ -48,15 +50,17 @@ public class RankingService {
                                            CountryEnum bonoCountry,
                                            CountryEnum bonaCountry,
                                            CountryEnum winnerCountry,
+                                           CountryEnum bestSingerOutfit,
                                            List<CountryEnum> bestFoodResults,
                                            List<CountryEnum> bestGuestOutfitResults,
                                            List<VoteEntryDTO> officialRankingTop10) {
         String username = user.getUsername();
         CountryEnum assignedCountry = user.getAssignedCountry();
 
-        int winnerPoints = getSingleVotePoints(user, VoteCategory.WINNER, winnerCountry);
         int bonoPoints = getSingleVotePoints(user, VoteCategory.BONO, bonoCountry);
         int bonaPoints = getSingleVotePoints(user, VoteCategory.BONA, bonaCountry);
+        int winnerPoints = getSingleVotePoints(user, VoteCategory.WINNER, winnerCountry);
+        int bestSingerOutfitPoints = getSingleVotePoints(user, VoteCategory.BEST_SINGER_OUTFIT, bestSingerOutfit);
 
         int bestFoodPoints = getAssignedCountryPoints(user, VoteCategory.BEST_FOOD, bestFoodResults);
         int bestGuestOutfitPoints = getAssignedCountryPoints(user, VoteCategory.BEST_GUEST_OUTFIT,
@@ -64,7 +68,7 @@ public class RankingService {
         int rankingAccuracy = calculateEurovisionAccuracyScore(user, officialRankingTop10);
 
         // Somma totale
-        int totalScore = winnerPoints + bonoPoints + bonaPoints +
+        int totalScore = bonoPoints + bonaPoints + winnerPoints + bestSingerOutfitPoints +
             bestFoodPoints + bestGuestOutfitPoints + rankingAccuracy;
 
         return new FinalScoreDTO(username, assignedCountry, totalScore,
