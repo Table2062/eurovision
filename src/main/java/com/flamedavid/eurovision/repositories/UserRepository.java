@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findAllByAdminFalse(); // Trova tutti gli utenti non admin
+    List<User> findAllByAdminFalseAndAwardRankingEnabledTrue(); // Trova tutti gli utenti non admin con award ranking abilitato
     int countByAdminFalse();
     Optional<User> findByUsername(String username);  // Cerca per username
     boolean existsByUsername(String username);       // Verifica se esiste un

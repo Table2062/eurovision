@@ -107,12 +107,24 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<UserSummaryDTO> getAllNonAdminUsers() {
-        return userRepository.findAllByAdminFalse()
-            .stream()
+    public List<UserSummaryDTO> getAllNonAdminUsers(boolean canBeAwardedOnly) {
+        List<User> users;
+        if (canBeAwardedOnly) {
+            users = userRepository.findAllByAdminFalseAndAwardRankingEnabledTrue();
+        } else {
+            users = userRepository.findAllByAdminFalse();
+        }
+        return users.stream()
             .map(user -> new UserSummaryDTO(
                 user.getUsername(),
                 user.getAssignedCountry()
             )).toList();
+    }
+
+    public void setAwardRankingEnabled(String username, boolean enabled) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found: " + username));
+        user.setAwardRankingEnabled(enabled);
+        userRepository.save(user);
     }
 }

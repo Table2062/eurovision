@@ -9,4 +9,5 @@ import java.util.UUID;
 
 public interface SingleVoteRepository extends JpaRepository<SingleVote, UUID> {
     List<SingleVote> findByUserVote(UserVote userVote);
+    boolean existsByUserVoteAndRevealedTrue(UserVote userVote);
 }

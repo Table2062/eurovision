@@ -6,8 +6,8 @@ import com.flamedavid.eurovision.dtos.MessageDTO;
 import com.flamedavid.eurovision.dtos.RevealVoteDTO;
 import com.flamedavid.eurovision.dtos.UserSummaryDTO;
 import com.flamedavid.eurovision.dtos.UserVotingResultsDTO;
-import com.flamedavid.eurovision.dtos.VoteRequestDTO;
 import com.flamedavid.eurovision.dtos.VotingResultsDTO;
+import com.flamedavid.eurovision.enums.CountryEnum;
 import com.flamedavid.eurovision.enums.VoteCategory;
 import com.flamedavid.eurovision.services.RankingService;
 import com.flamedavid.eurovision.services.UserService;
@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,8 +52,8 @@ public class AdminController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/users")
-    public ResponseEntity<List<UserSummaryDTO>> getAllNonAdminUsers() {
-        List<UserSummaryDTO> users = userService.getAllNonAdminUsers();
+    public ResponseEntity<List<UserSummaryDTO>> getAllNonAdminUsers(@RequestParam(required = false) boolean canBeAwardedOnly) {
+        List<UserSummaryDTO> users = userService.getAllNonAdminUsers(canBeAwardedOnly);
         return ResponseEntity.ok(users);
     }
 
@@ -86,6 +87,13 @@ public class AdminController {
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/voting-results/{category}/users/{username}")
+    public ResponseEntity<MessageDTO> deleteVotingResultsForUser(@PathVariable VoteCategory category,
+                                                                        @PathVariable String username) {
+        return ResponseEntity.ok(voteService.deleteUserVotingResults(username, category));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/voting-results/{category}/users/{username}")
     public ResponseEntity<UserVotingResultsDTO> getVotingResultsForUser(@PathVariable VoteCategory category,
                                                                         @PathVariable String username) {
@@ -99,9 +107,32 @@ public class AdminController {
         return ResponseEntity.ok(voteService.getUsersThatVoted(category));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/final-score")
-    public ResponseEntity<List<FinalScoreDTO>> getFinalScore(@RequestBody VoteRequestDTO officialRankingTop10,
-                                                             @RequestParam(defaultValue = "3") int limit) {
-        return ResponseEntity.ok(rankingService.calculateFinalScores(officialRankingTop10.votes(), limit));
+    public ResponseEntity<List<FinalScoreDTO>> getFinalScore(@RequestParam Integer limit,
+                                                             @RequestParam(defaultValue = "false") boolean canBeAwardedOnly) {
+        return ResponseEntity.ok(rankingService.calculateFinalScores(limit, canBeAwardedOnly));
     }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/finalTop10")
+    public ResponseEntity<MessageDTO> saveFinalTop10(@RequestBody List<CountryEnum> finalTop10) {
+        return ResponseEntity.ok(rankingService.saveFinalTop10(finalTop10));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/finalTop10")
+    public ResponseEntity<MessageDTO> deleteFinalTop10() {
+        return ResponseEntity.ok(rankingService.deleteFinalTop10());
+    }
+
+    //flag a user as awardRankingEnabled true
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/users/{username}/award-ranking/{enabled}")
+    public ResponseEntity<MessageDTO> setAwardRankingEnabled(@PathVariable String username,
+                                                             @PathVariable boolean enabled) {
+        userService.setAwardRankingEnabled(username, enabled);
+        return ResponseEntity.ok(new MessageDTO("User award ranking status updated!"));
+    }
+
 }

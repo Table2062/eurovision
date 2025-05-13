@@ -37,4 +37,6 @@ public class User {
     @Column(unique = true)
     private CountryEnum assignedCountry;
 
+    @Column(name = "award_ranking_enabled")
+    private boolean awardRankingEnabled = false;
 }

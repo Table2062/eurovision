@@ -8,10 +8,10 @@ import java.util.List;
 public enum VoteCategory {
     EUROVISION("Classifica Eurovision"),
     BEST_FOOD("Miglior cibo"),
-    BEST_GUEST_OUTFIT("Miglior Outfit - Cosplay"),
+    BEST_GUEST_OUTFIT("Miglior outfit - cosplay"),
     BONO("Il più bello"),
     BONA("La più bella"),
-    BEST_SINGER_OUTFIT("Miglior Outfit - Cantante"),
+    BEST_SINGER_OUTFIT("Miglior outfit - cantante"),
     WINNER("Chi vince?");
 
     private final String label;

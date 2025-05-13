@@ -4,6 +4,7 @@ import com.flamedavid.eurovision.configurations.CountryConfigs;
 import com.flamedavid.eurovision.dtos.CountryDTO;
 import com.flamedavid.eurovision.dtos.CountryListResponseDTO;
 import com.flamedavid.eurovision.dtos.CountryResultDTO;
+import com.flamedavid.eurovision.dtos.MessageDTO;
 import com.flamedavid.eurovision.dtos.UserCountryResultDTO;
 import com.flamedavid.eurovision.dtos.UserVotingResultsDTO;
 import com.flamedavid.eurovision.dtos.VoteCategoryDTO;
@@ -158,6 +159,18 @@ public class VoteService {
             .map(vote -> new UserCountryResultDTO(vote.getCountry(), vote.getPoints(), vote.isRevealed()))
             .toList();
         return new UserVotingResultsDTO(username, category, sortedResults);
+    }
+
+    public MessageDTO deleteUserVotingResults(String username, VoteCategory category) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found"));
+        UserVote userVote = userVoteRepository.findByUserAndCategory(user, category)
+            .orElseThrow(() -> new NotFoundException("Vote not found"));
+        if (singleVoteRepository.existsByUserVoteAndRevealedTrue(userVote)) {
+            throw new BadRequestException("Cannot delete voting results with revealed votes");
+        }
+        userVoteRepository.delete(userVote);
+        return new MessageDTO("Voting results deleted");
     }
 
     public VotingResultsDTO calculateResults(VoteCategory category, boolean showFirstVote, int limit) {
