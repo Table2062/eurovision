@@ -22,6 +22,16 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
       ddl-auto: update
     show-sql: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: table2062@gmail.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   expiration: 24
@@ -41,14 +51,6 @@ countries:
       participant: "Go-Jo"
     - name: "AUSTRIA"
       participant: "JJ"
-    - name: "AZERBAIJAN"
-      participant: "Mamagama"
-    - name: "BELGIUM"
-      participant: "Red Sebastian"
-    - name: "CROATIA"
-      participant: "Marko Bošnjak"
-    - name: "CYPRUS"
-      participant: "Theo Evan"
     - name: "CZECHIA"
       participant: "ADONXS"
     - name: "DENMARK"
@@ -95,8 +97,6 @@ countries:
       participant: "Gabry Ponte"
     - name: "SERBIA"
       participant: "Princ"
-    - name: "SLOVENIA"
-      participant: "Klemen"
     - name: "SPAIN"
       participant: "Melody"
     - name: "SWEDEN"
@@ -116,14 +116,6 @@ countries:
       participant: "Go-Jo"
     - name: "AUSTRIA"
       participant: "JJ"
-    - name: "AZERBAIJAN"
-      participant: "Mamagama"
-    - name: "BELGIUM"
-      participant: "Red Sebastian"
-    - name: "CROATIA"
-      participant: "Marko Bošnjak"
-    - name: "CYPRUS"
-      participant: "Theo Evan"
     - name: "CZECHIA"
       participant: "ADONXS"
     - name: "ESTONIA"
@@ -146,8 +138,6 @@ countries:
       participant: "Gabry Ponte"
     - name: "SERBIA"
       participant: "Princ"
-    - name: "SLOVENIA"
-      participant: "Klemen"
     - name: "SWEDEN"
       participant: "KAJ"
     - name: "UKRAINE"

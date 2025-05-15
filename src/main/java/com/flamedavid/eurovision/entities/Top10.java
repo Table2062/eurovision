@@ -5,15 +5,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_votes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "category"})
-})
+@Table(name = "top10")
 @Data
 public class Top10 {
 

@@ -64,16 +64,16 @@ public class RankingService {
         if (Objects.isNull(limit) || limit <= 0) {
             limit = users.size();
         }
-        var bonoCountry = voteService.calculateResults(VoteCategory.BONO, true, 1)
+        var bonoCountry = voteService.calculateResults(VoteCategory.BONO, 1)
             .countryResults().get(0).countryEnum();
-        var bonaCountry = voteService.calculateResults(VoteCategory.BONA, true, 1)
+        var bonaCountry = voteService.calculateResults(VoteCategory.BONA,  1)
             .countryResults().get(0).countryEnum();
         var winnerCountry = finalTop10.get(0);
-        var bestSingerOutfit = voteService.calculateResults(VoteCategory.BEST_SINGER_OUTFIT, true, 1)
+        var bestSingerOutfit = voteService.calculateResults(VoteCategory.BEST_SINGER_OUTFIT,  1)
             .countryResults().get(0).countryEnum();
-        var bestFoodResults = voteService.calculateResults(VoteCategory.BEST_FOOD, true, 5)
+        var bestFoodResults = voteService.calculateResults(VoteCategory.BEST_FOOD,  5)
             .countryResults().stream().map(CountryResultDTO::countryEnum).toList();
-        var bestGuestOutfitResults = voteService.calculateResults(VoteCategory.BEST_GUEST_OUTFIT, true, 5)
+        var bestGuestOutfitResults = voteService.calculateResults(VoteCategory.BEST_GUEST_OUTFIT,  5)
             .countryResults().stream().map(CountryResultDTO::countryEnum).toList();
 
         return users.stream()

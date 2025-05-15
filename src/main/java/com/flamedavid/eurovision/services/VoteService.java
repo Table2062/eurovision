@@ -1,6 +1,7 @@
 package com.flamedavid.eurovision.services;
 
 import com.flamedavid.eurovision.configurations.CountryConfigs;
+import com.flamedavid.eurovision.dtos.CategoryDTO;
 import com.flamedavid.eurovision.dtos.CountryDTO;
 import com.flamedavid.eurovision.dtos.CountryListResponseDTO;
 import com.flamedavid.eurovision.dtos.CountryResultDTO;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -173,7 +175,7 @@ public class VoteService {
         return new MessageDTO("Voting results deleted");
     }
 
-    public VotingResultsDTO calculateResults(VoteCategory category, boolean showFirstVote, int limit) {
+    public VotingResultsDTO calculateResults(VoteCategory category, int limit) {
         int nonAdminUsersNum = userRepository.countByAdminFalse();
         List<UserVote> userVotes = userVoteRepository.findAllByCategory(category);
         boolean completed = userVotes.size() == nonAdminUsersNum;
@@ -198,9 +200,6 @@ public class VoteService {
             .sorted(Comparator.comparing(CountryResultDTO::points).reversed())
             .limit(limit)
             .toList();
-        if (!showFirstVote) {
-            sortedResults = sortedResults.subList(1, sortedResults.size());
-        }
         return new VotingResultsDTO(completed, category, sortedResults);
     }
 
@@ -257,6 +256,13 @@ public class VoteService {
             .stream()
             .map(userVote -> userVote.getUser().getUsername())
             .distinct()
+            .toList();
+    }
+
+    public List<CategoryDTO> getAllCategories() {
+        return Arrays.stream(VoteCategory.values())
+            .map(voteCategory ->
+                new CategoryDTO(voteCategory.name(), voteCategory.getLabel()))
             .toList();
     }
 }

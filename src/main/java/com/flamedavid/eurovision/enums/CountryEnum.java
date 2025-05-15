@@ -58,6 +58,8 @@ public enum CountryEnum {
         for (CountryEnum country : CountryEnum.values()) {
             if (country.getLabel().equalsIgnoreCase(countryName)) {
                 return country;
+            } else if (country.name().equalsIgnoreCase(countryName)) {
+                return country;
             }
         }
         throw new NotFoundException("No constant with country name " + countryName + " found");

@@ -1,5 +1,6 @@
 package com.flamedavid.eurovision.controllers;
 
+import com.flamedavid.eurovision.dtos.CategoryDTO;
 import com.flamedavid.eurovision.dtos.ChangePasswordDTO;
 import com.flamedavid.eurovision.dtos.FinalScoreDTO;
 import com.flamedavid.eurovision.dtos.MessageDTO;
@@ -9,6 +10,7 @@ import com.flamedavid.eurovision.dtos.UserVotingResultsDTO;
 import com.flamedavid.eurovision.dtos.VotingResultsDTO;
 import com.flamedavid.eurovision.enums.CountryEnum;
 import com.flamedavid.eurovision.enums.VoteCategory;
+import com.flamedavid.eurovision.services.EmailService;
 import com.flamedavid.eurovision.services.RankingService;
 import com.flamedavid.eurovision.services.UserService;
 import com.flamedavid.eurovision.services.VoteService;
@@ -31,9 +33,10 @@ import java.util.List;
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
-    private final UserService userService; // Servizio per la gestione dell'utente
+    private final UserService userService;
     private final VoteService voteService;
     private final RankingService rankingService;
+    private final EmailService emailService;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/users/{username}")
@@ -55,6 +58,12 @@ public class AdminController {
     public ResponseEntity<List<UserSummaryDTO>> getAllNonAdminUsers(@RequestParam(required = false) boolean canBeAwardedOnly) {
         List<UserSummaryDTO> users = userService.getAllNonAdminUsers(canBeAwardedOnly);
         return ResponseEntity.ok(users);
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        return ResponseEntity.ok(voteService.getAllCategories());
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -81,9 +90,8 @@ public class AdminController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/voting-results/{category}")
     public ResponseEntity<VotingResultsDTO> getVotingResults(@PathVariable VoteCategory category,
-                                                             @RequestParam(defaultValue = "false") boolean showFirstVote,
                                                              @RequestParam(defaultValue = "10") int limit){
-        return ResponseEntity.ok(voteService.calculateResults(category, showFirstVote, limit));
+        return ResponseEntity.ok(voteService.calculateResults(category, limit));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -126,13 +134,19 @@ public class AdminController {
         return ResponseEntity.ok(rankingService.deleteFinalTop10());
     }
 
-    //flag a user as awardRankingEnabled true
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/users/{username}/award-ranking/{enabled}")
     public ResponseEntity<MessageDTO> setAwardRankingEnabled(@PathVariable String username,
                                                              @PathVariable boolean enabled) {
         userService.setAwardRankingEnabled(username, enabled);
         return ResponseEntity.ok(new MessageDTO("User award ranking status updated!"));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/send-final-email")
+    public ResponseEntity<MessageDTO> sendFinalEmail() {
+        emailService.sendFinalEmail();
+        return ResponseEntity.ok(new MessageDTO("Final emails sent!"));
     }
 
 }
