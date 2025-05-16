@@ -15,4 +15,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsername(String username);  // Cerca per username
     boolean existsByUsername(String username);       // Verifica se esiste un
     boolean existsByAssignedCountry(CountryEnum countryEnum);
+    Optional<User> findByAssignedCountry(CountryEnum countryEnum);
 }

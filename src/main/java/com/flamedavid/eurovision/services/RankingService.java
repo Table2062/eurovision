@@ -1,5 +1,6 @@
 package com.flamedavid.eurovision.services;
 
+import com.flamedavid.eurovision.dtos.CountryDTO;
 import com.flamedavid.eurovision.dtos.CountryResultDTO;
 import com.flamedavid.eurovision.dtos.FinalScoreDTO;
 import com.flamedavid.eurovision.dtos.MessageDTO;
@@ -12,6 +13,7 @@ import com.flamedavid.eurovision.exceptions.BadRequestException;
 import com.flamedavid.eurovision.repositories.Top10Repository;
 import com.flamedavid.eurovision.repositories.UserRepository;
 import com.flamedavid.eurovision.repositories.UserVoteRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,13 @@ public class RankingService {
     private final Top10Repository top10Repository;
     private final VoteService voteService;
 
+    public List<String> getFinalTop10() {
+        return top10Repository.findByCode(FINAL_TOP10_CODE)
+            .map(Top10::getPositions)
+            .map(positions -> Arrays.stream(positions.split(",")).toList())
+            .orElse(List.of());
+    }
+
     public MessageDTO saveFinalTop10(List<CountryEnum> finalTop10) {
         if (finalTop10.size() != 10) {
             return new MessageDTO("The final top 10 must contain exactly 10 countries.");
@@ -45,6 +54,7 @@ public class RankingService {
         return new MessageDTO("Final top 10 saved successfully.");
     }
 
+    @Transactional
     public MessageDTO deleteFinalTop10() {
         top10Repository.deleteByCode(FINAL_TOP10_CODE);
         return new MessageDTO("Final top 10 deleted successfully.");
@@ -65,16 +75,16 @@ public class RankingService {
             limit = users.size();
         }
         var bonoCountry = voteService.calculateResults(VoteCategory.BONO, 1)
-            .countryResults().get(0).countryEnum();
+            .countryResults().get(0).country().name();
         var bonaCountry = voteService.calculateResults(VoteCategory.BONA,  1)
-            .countryResults().get(0).countryEnum();
+            .countryResults().get(0).country().name();
         var winnerCountry = finalTop10.get(0);
         var bestSingerOutfit = voteService.calculateResults(VoteCategory.BEST_SINGER_OUTFIT,  1)
-            .countryResults().get(0).countryEnum();
+            .countryResults().get(0).country().name();
         var bestFoodResults = voteService.calculateResults(VoteCategory.BEST_FOOD,  5)
-            .countryResults().stream().map(CountryResultDTO::countryEnum).toList();
+            .countryResults().stream().map(CountryResultDTO::country).map(CountryDTO::name).toList();
         var bestGuestOutfitResults = voteService.calculateResults(VoteCategory.BEST_GUEST_OUTFIT,  5)
-            .countryResults().stream().map(CountryResultDTO::countryEnum).toList();
+            .countryResults().stream().map(CountryResultDTO::country).map(CountryDTO::name).toList();
 
         return users.stream()
             .map(user -> computeFinalScore(user, bonoCountry, bonaCountry, winnerCountry,
@@ -109,7 +119,8 @@ public class RankingService {
         int totalScore = bonoPoints + bonaPoints + winnerPoints + bestSingerOutfitPoints +
             bestFoodPoints + bestGuestOutfitPoints + rankingAccuracy;
 
-        return new FinalScoreDTO(username, assignedCountry, totalScore,
+        var countryDTO = new CountryDTO(assignedCountry, assignedCountry.getLabel(), assignedCountry.getCountryCode(), null, user.getUsername());
+        return new FinalScoreDTO(username, countryDTO, totalScore,
             bonoPoints, bonaPoints, winnerPoints, bestSingerOutfitPoints,
             bestFoodPoints, bestGuestOutfitPoints, rankingAccuracy);
     }

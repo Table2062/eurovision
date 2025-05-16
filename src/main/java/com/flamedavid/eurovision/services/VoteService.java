@@ -10,6 +10,7 @@ import com.flamedavid.eurovision.dtos.UserCountryResultDTO;
 import com.flamedavid.eurovision.dtos.UserVotingResultsDTO;
 import com.flamedavid.eurovision.dtos.VoteCategoryDTO;
 import com.flamedavid.eurovision.dtos.VoteRequestDTO;
+import com.flamedavid.eurovision.dtos.VoteStatusDTO;
 import com.flamedavid.eurovision.dtos.VotingResultsDTO;
 import com.flamedavid.eurovision.entities.SingleVote;
 import com.flamedavid.eurovision.entities.User;
@@ -30,10 +31,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,7 +119,7 @@ public class VoteService {
                 throw new BadRequestException("You cannot vote your assigned country for this category.");
             }
             // Controlla se la nazione è tra quelle ammesse
-            if (!getAvailableCountriesForCategory(category).contains(vote.country())) {
+            if (getAvailableCountriesForCategory(category).stream().noneMatch(countryDTO -> countryDTO.name().equals(vote.country()))) {
                 throw new BadRequestException("The requested country cannot be voted for %s".formatted(category));
             }
         }
@@ -156,9 +158,13 @@ public class VoteService {
         UserVote userVote = userVoteRepository.findByUserAndCategory(user, category)
             .orElseThrow(() -> new NotFoundException("Vote not found"));
 
+        var countryDTOMap = getCountryDTOStreamForCategory(category, null)
+            .collect(Collectors.toMap(CountryDTO::name, dto -> dto));
+
         List<SingleVote> votes = userVote.getVotes();
         List<UserCountryResultDTO> sortedResults = votes.stream()
-            .map(vote -> new UserCountryResultDTO(vote.getCountry(), vote.getPoints(), vote.isRevealed()))
+            .map(vote -> new UserCountryResultDTO(countryDTOMap.get(vote.getCountry()),
+                    vote.getPoints(), vote.isRevealed()))
             .toList();
         return new UserVotingResultsDTO(username, category, sortedResults);
     }
@@ -180,10 +186,12 @@ public class VoteService {
         List<UserVote> userVotes = userVoteRepository.findAllByCategory(category);
         boolean completed = userVotes.size() == nonAdminUsersNum;
 
-        Map<CountryEnum, Integer> resultsMap = new EnumMap<>(CountryEnum.class);
-        List<CountryEnum> countries = getAvailableCountriesForCategory(category);
-        for (CountryEnum country : countries) {
-            resultsMap.put(country, 0);
+        Map<CountryEnum, Integer> resultsMap = new HashMap<>();
+        List<CountryDTO> countries = getAvailableCountriesForCategory(category);
+        var countryDTOMap = getCountryDTOStreamForCategory(category, null)
+            .collect(Collectors.toMap(CountryDTO::name, dto -> dto));
+        for (CountryDTO country : countries) {
+            resultsMap.put(country.name(), 0);
         }
         for (UserVote userVote : userVotes) {
             for (SingleVote singleVote : userVote.getVotes()) {
@@ -196,14 +204,17 @@ public class VoteService {
             }
         }
         List<CountryResultDTO> sortedResults = resultsMap.entrySet().stream()
-            .map(entry -> new CountryResultDTO(entry.getKey(), entry.getValue()))
+            .map(entry -> {
+                var countryDTO = countryDTOMap.get(entry.getKey());
+                return new CountryResultDTO(countryDTO, entry.getValue());
+            })
             .sorted(Comparator.comparing(CountryResultDTO::points).reversed())
             .limit(limit)
             .toList();
         return new VotingResultsDTO(completed, category, sortedResults);
     }
 
-    private List<CountryEnum> getAvailableCountriesForCategory(VoteCategory category) {
+    private List<CountryDTO> getAvailableCountriesForCategory(VoteCategory category) {
         Stream<CountryDTO> countryEnumsStream;
         switch(category) {
             case BEST_FOOD -> countryEnumsStream = countryConfigs.getBestFood().stream();
@@ -212,23 +223,32 @@ public class VoteService {
             case BONA -> countryEnumsStream = countryConfigs.getBona().stream();
             default -> countryEnumsStream = countryConfigs.getFinalists().stream();
         }
-        return countryEnumsStream.map(CountryDTO::name).toList();
+        return countryEnumsStream.toList();
+    }
+
+    public Stream<CountryDTO> getCountryDTOStreamForCategory(VoteCategory category, User user) {
+        var stream = switch (category) {
+            case BEST_FOOD -> countryConfigs.getBestFood().stream()
+                .filter(countryDTO -> Objects.isNull(user) || !countryDTO.name().equals(user.getAssignedCountry()));
+            case BEST_GUEST_OUTFIT -> countryConfigs.getBestGuestOutfit().stream()
+                .filter(countryDTO -> Objects.isNull(user) || !countryDTO.name().equals(user.getAssignedCountry()));
+            case BONO -> countryConfigs.getBono().stream();
+            case BONA -> countryConfigs.getBona().stream();
+            default -> countryConfigs.getFinalists().stream();
+        };
+        return stream.map(dto -> CountryDTO.builder()
+            .name(dto.name())
+            .label(dto.name().getLabel())
+            .isoCode(dto.name().getCountryCode())
+            .participant(dto.participant())
+            .assignedGuest(dto.assignedGuest())
+            .build());
     }
 
     public CountryListResponseDTO getAvailableCountriesForCategory(VoteCategory category, String username) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new NotFoundException("User not found"));
-        Stream<CountryDTO> countryEnumsStream;
-
-        switch(category) {
-            case BEST_FOOD -> countryEnumsStream = countryConfigs.getBestFood().stream()
-                .filter(countryDTO -> !countryDTO.name().equals(user.getAssignedCountry()));
-            case BEST_GUEST_OUTFIT -> countryEnumsStream = countryConfigs.getBestGuestOutfit().stream()
-                .filter(countryDTO -> !countryDTO.name().equals(user.getAssignedCountry()));
-            case BONO -> countryEnumsStream = countryConfigs.getBono().stream();
-            case BONA -> countryEnumsStream = countryConfigs.getBona().stream();
-            default -> countryEnumsStream = countryConfigs.getFinalists().stream();
-        }
+        Stream<CountryDTO> countryEnumsStream = getCountryDTOStreamForCategory(category, user);
 
         var countryUserMap = userRepository.findAllByAdminFalse().stream()
             .map(u -> Pair.of(u.getAssignedCountry(), u.getUsername()))
@@ -251,18 +271,28 @@ public class VoteService {
         return new CountryListResponseDTO(countries);
     }
 
-    public List<String> getUsersThatVoted(VoteCategory category) {
-        return userVoteRepository.findAllByCategory(category)
+    public VoteStatusDTO getUsersThatVoted(VoteCategory category) {
+        List<String> voters = userVoteRepository.findAllByCategory(category)
             .stream()
             .map(userVote -> userVote.getUser().getUsername())
             .distinct()
             .toList();
+        return voteStatusRepository.findByCategory(category)
+            .map(voteStatus -> new VoteStatusDTO(category, voteStatus.isOpen(), voters))
+            .orElse(new VoteStatusDTO(category, false, List.of()));
     }
 
     public List<CategoryDTO> getAllCategories() {
         return Arrays.stream(VoteCategory.values())
             .map(voteCategory ->
-                new CategoryDTO(voteCategory.name(), voteCategory.getLabel()))
+                new CategoryDTO(voteCategory.name(), voteCategory.getLabel(), getLimit(voteCategory)))
             .toList();
+    }
+
+    private int getLimit(VoteCategory category) {
+        return switch (category) {
+            case BEST_FOOD, BEST_GUEST_OUTFIT -> 5;
+            default -> 10;
+        };
     }
 }

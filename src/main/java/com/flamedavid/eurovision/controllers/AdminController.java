@@ -7,6 +7,7 @@ import com.flamedavid.eurovision.dtos.MessageDTO;
 import com.flamedavid.eurovision.dtos.RevealVoteDTO;
 import com.flamedavid.eurovision.dtos.UserSummaryDTO;
 import com.flamedavid.eurovision.dtos.UserVotingResultsDTO;
+import com.flamedavid.eurovision.dtos.VoteStatusDTO;
 import com.flamedavid.eurovision.dtos.VotingResultsDTO;
 import com.flamedavid.eurovision.enums.CountryEnum;
 import com.flamedavid.eurovision.enums.VoteCategory;
@@ -111,7 +112,7 @@ public class AdminController {
     //get user that already voted a category
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/users/{category}")
-    public ResponseEntity<List<String>> getUsersThatVoted(@PathVariable VoteCategory category) {
+    public ResponseEntity<VoteStatusDTO> getUsersThatVoted(@PathVariable VoteCategory category) {
         return ResponseEntity.ok(voteService.getUsersThatVoted(category));
     }
 
@@ -120,6 +121,12 @@ public class AdminController {
     public ResponseEntity<List<FinalScoreDTO>> getFinalScore(@RequestParam Integer limit,
                                                              @RequestParam(defaultValue = "false") boolean canBeAwardedOnly) {
         return ResponseEntity.ok(rankingService.calculateFinalScores(limit, canBeAwardedOnly));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/finalTop10")
+    public ResponseEntity<List<String>> getFinalTop10() {
+        return ResponseEntity.ok(rankingService.getFinalTop10());
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")

@@ -117,7 +117,8 @@ public class UserService {
         return users.stream()
             .map(user -> new UserSummaryDTO(
                 user.getUsername(),
-                user.getAssignedCountry()
+                user.getAssignedCountry(),
+                user.isAwardRankingEnabled()
             )).toList();
     }
 
