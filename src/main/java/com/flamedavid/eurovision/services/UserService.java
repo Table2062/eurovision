@@ -99,9 +99,6 @@ public class UserService {
         }
 
         User user = userOpt.get();
-        if (user.isAdmin()) {
-            throw new BadRequestException("Cannot change the password of an admin user.");
-        }
 
         user.setPassword(passwordEncoder.encode(newPassword)); // Cripta la nuova password
         userRepository.save(user);
