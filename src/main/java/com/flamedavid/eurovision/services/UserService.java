@@ -125,4 +125,8 @@ public class UserService {
         user.setAwardRankingEnabled(enabled);
         userRepository.save(user);
     }
+
+    public boolean existsByCountry(CountryEnum countryEnum) {
+        return userRepository.existsByAssignedCountry(countryEnum);
+    }
 }

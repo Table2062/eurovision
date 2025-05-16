@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
@@ -36,10 +37,11 @@ public class AuthController {
     }
 
     @GetMapping("/all-countries")
-    public ResponseEntity<CountryListResponseDTO> getAllCountries() {
+    public ResponseEntity<CountryListResponseDTO> getAllCountries(@RequestParam(value = "only-available", defaultValue = "false") boolean onlyAvailable) {
         var countries = Arrays.stream(CountryEnum.values())
             .map(countryEnum -> new CountryDTO(countryEnum, countryEnum.getLabel(),
                 countryEnum.getCountryCode(), null, null))
+            .filter(country -> !onlyAvailable || !userService.existsByCountry(country.name()))
             .toList();
         return ResponseEntity.ok(new CountryListResponseDTO(countries));
     }
