@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Votazioni Eurovision 2025 - Punteggi finali</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background: #ffffff;
+            max-width: 600px;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: #003366;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .logo {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+            color: #333333;
+        }
+
+        .content h2 {
+            color: #003366;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .footer {
+            background: #f0f0f0;
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://logowik.com/content/uploads/images/eurovision-song-contest-switzerland-20252278.logowik.com.webp"
+             alt="Eurovision Logo" class="logo">
+    </div>
+    <div class="content">
+        <p>Ciao <strong>{{USERNAME}}</strong>,</p>
+        <p>Grazie per aver partecipato alla nostra serata evento per la finale dell' Eurovision Song Contest 2025.</p>
+        <p>Hai ottenuto un totale di <strong>{{POINTS}} punti</strong> 🎉.</p>
+        <br/>
+        <h3>🏆 Podio classifica generale</h3>
+        <table class="summary-table">
+            <thead>
+            <tr>
+                <th>Posizione</th>
+                <th>Nome utente</th>
+                <th>Punti</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>🥇</td>
+                <td>{{TOP1_USERNAME}}</td>
+                <td>{{TOP1_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥈</td>
+                <td>{{TOP2_USERNAME}}</td>
+                <td>{{TOP2_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥉</td>
+                <td>{{TOP3_USERNAME}}</td>
+                <td>{{TOP3_POINTS}}</td>
+            </tr>
+            </tbody>
+        </table>
+        <br/><br/>
+        <h3>🎁 Podio classifica premi</h3>
+        <table class="summary-table">
+            <thead>
+            <tr>
+                <th>Posizione</th>
+                <th>Nome utente</th>
+                <th>Punti</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>🥇</td>
+                <td>{{TOP1_REWARD_USERNAME}}</td>
+                <td>{{TOP1_REWARD_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥈</td>
+                <td>{{TOP2_REWARD_USERNAME}}</td>
+                <td>{{TOP2_REWARD_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥉</td>
+                <td>{{TOP3_REWARD_USERNAME}}</td>
+                <td>{{TOP3_REWARD_POINTS}}</td>
+            </tr>
+            </tbody>
+        </table>
+        <br/><br/>
+        <h3>🍲 Podio miglior cibo</h3>
+        <table class="summary-table">
+            <thead>
+            <tr>
+                <th>Posizione</th>
+                <th>Nome utente</th>
+                <th>Punti</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>🥇</td>
+                <td>{{TOP1_FOOD_USERNAME}}</td>
+                <td>{{TOP1_FOOD_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥈</td>
+                <td>{{TOP2_FOOD_USERNAME}}</td>
+                <td>{{TOP2_FOOD_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥉</td>
+                <td>{{TOP3_FOOD_USERNAME}}</td>
+                <td>{{TOP3_FOOD_POINTS}}</td>
+            </tr>
+            </tbody>
+        </table>
+        <br/><br/>
+        <h3>👩‍🎤 Podio miglior cosplay</h3>
+        <table class="summary-table">
+            <thead>
+            <tr>
+                <th>Posizione</th>
+                <th>Nome utente</th>
+                <th>Punti</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>🥇</td>
+                <td>{{TOP1_COSPLAY_USERNAME}}</td>
+                <td>{{TOP1_COSPLAY_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥈</td>
+                <td>{{TOP2_COSPLAY_USERNAME}}</td>
+                <td>{{TOP2_COSPLAY_POINTS}}</td>
+            </tr>
+            <tr>
+                <td>🥉</td>
+                <td>{{TOP3_COSPLAY_USERNAME}}</td>
+                <td>{{TOP3_COSPLAY_POINTS}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="footer">
+        &copy; Eurovision Song Contest Switzerland 2025<br/>
+        Fan Event by Davide Figuccia<br/>
+    </div>
+</div>
+</body>
+</html>
