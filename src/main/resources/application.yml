@@ -1,0 +1,187 @@
+server:
+  port: ${PORT}
+  address: 0.0.0.0
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  security:
+    user:
+      name: ${ADMIN_USERNAME}
+      password: ${ADMIN_DEFAULT_PASSWORD}
+  application:
+    name: eurovision
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: "org.postgresql.Driver"
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    database: postgresql
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+      ddl-auto: update
+    show-sql: false
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  expiration: ${JWT_EXPIRATION}
+  secret: ${JWT_SECRET}
+
+admin:
+  username: ${ADMIN_USERNAME}
+  default-password: ${ADMIN_DEFAULT_PASSWORD}
+
+countries:
+  finalists:
+    - name: "ALBANIA"
+      participant: "Shkodra Elektronike"
+    - name: "ARMENIA"
+      participant: "PARG"
+    - name: "AUSTRIA"
+      participant: "JJ"
+    - name: "DENMARK"
+      participant: "Sissal"
+    - name: "ESTONIA"
+      participant: "Tommy Cash"
+    - name: "FINLAND"
+      participant: "Erika Vikman"
+    - name: "FRANCE"
+      participant: "Louane"
+    - name: "GERMANY"
+      participant: "Abor & Tynna"
+    - name: "GREECE"
+      participant: "Klavdia"
+    - name: "ICELAND"
+      participant: "VÆB"
+    - name: "ISRAEL"
+      participant: "Yuval Raphael"
+    - name: "ITALY"
+      participant: "Lucio Corsi"
+    - name: "LATVIA"
+      participant: "Tautumeitas"
+    - name: "LITHUANIA"
+      participant: "Katarsis"
+    - name: "LUXEMBOURG"
+      participant: "Laura Thorn"
+    - name: "MALTA"
+      participant: "Miriana Conte"
+    - name: "NETHERLANDS"
+      participant: "Claude"
+    - name: "NORWAY"
+      participant: "Kyle Alessandro"
+    - name: "POLAND"
+      participant: "Justyna Steczkowska"
+    - name: "PORTUGAL"
+      participant: "NAPA"
+    - name: "SAN_MARINO"
+      participant: "Gabry Ponte"
+    - name: "SPAIN"
+      participant: "Melody"
+    - name: "SWEDEN"
+      participant: "KAJ"
+    - name: "SWITZERLAND"
+      participant: "Zoë Më"
+    - name: "UKRAINE"
+      participant: "Ziferblat"
+    - name: "UNITED_KINGDOM"
+      participant: "Remember Monday"
+  bono:
+    - name: "ALBANIA"
+      participant: "Shkodra Elektronike"
+    - name: "ARMENIA"
+      participant: "PARG"
+    - name: "AUSTRIA"
+      participant: "JJ"
+    - name: "ESTONIA"
+      participant: "Tommy Cash"
+    - name: "GERMANY"
+      participant: "Abor & Tynna"
+    - name: "ICELAND"
+      participant: "VÆB"
+    - name: "ITALY"
+      participant: "Lucio Corsi"
+    - name: "LITHUANIA"
+      participant: "Katarsis"
+    - name: "NETHERLANDS"
+      participant: "Claude"
+    - name: "NORWAY"
+      participant: "Kyle Alessandro"
+    - name: "PORTUGAL"
+      participant: "NAPA"
+    - name: "SAN_MARINO"
+      participant: "Gabry Ponte"
+    - name: "SWEDEN"
+      participant: "KAJ"
+    - name: "UKRAINE"
+      participant: "Ziferblat"
+  bona:
+    - name: "ALBANIA"
+      participant: "Shkodra Elektronike"
+    - name: "DENMARK"
+      participant: "Sissal"
+    - name: "FINLAND"
+      participant: "Erika Vikman"
+    - name: "FRANCE"
+      participant: "Louane"
+    - name: "GERMANY"
+      participant: "Abor & Tynna"
+    - name: "GREECE"
+      participant: "Klavdia"
+    - name: "ISRAEL"
+      participant: "Yuval Raphael"
+    - name: "LATVIA"
+      participant: "Tautumeitas"
+    - name: "LITHUANIA"
+      participant: "Katarsis"
+    - name: "LUXEMBOURG"
+      participant: "Laura Thorn"
+    - name: "MALTA"
+      participant: "Miriana Conte"
+    - name: "POLAND"
+      participant: "Justyna Steczkowska"
+    - name: "SPAIN"
+      participant: "Melody"
+    - name: "SWITZERLAND"
+      participant: "Zoë Më"
+    - name: "UNITED_KINGDOM"
+      participant: "Remember Monday"
+  best-food:
+    - name: "ALBANIA"
+    - name: "ARMENIA"
+    - name: "AUSTRALIA"
+    - name: "BELGIUM"
+    - name: "CYPRUS"
+    - name: "DENMARK"
+    - name: "FINLAND"
+    - name: "FRANCE"
+    - name: "GEORGIA"
+    - name: "GERMANY"
+    - name: "GREECE"
+    - name: "MALTA"
+    - name: "NETHERLANDS"
+    - name: "POLAND"
+    - name: "SAN_MARINO"
+    - name: "SPAIN"
+    - name: "SWEDEN"
+    - name: "SWITZERLAND"
+    - name: "UNITED_KINGDOM"
+  best-guest-outfit:
+    - name: "AUSTRALIA"
+    - name: "BELGIUM"
+    - name: "FRANCE"
+    - name: "GREECE"
+    - name: "MALTA"
+    - name: "SPAIN"
+    - name: "SWEDEN"
+    - name: "UNITED_KINGDOM"

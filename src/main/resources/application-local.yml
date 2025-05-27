@@ -1,0 +1,36 @@
+server:
+  port: 8080
+spring:
+  security:
+    user:
+      name: admin
+      password: nimda
+  datasource:
+    url: jdbc:postgresql://localhost:5435/eurovision
+    driver-class-name: "org.postgresql.Driver"
+    username: eurovision
+    password: eurovision
+  mail:
+    host: localhost
+    port: 2525  # dummy port, not used
+    username: dummy
+    password: dummy
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+jwt:
+  expiration: 24
+  secret: 12345678901234567890123456789012
+
+admin:
+  username: admin
+  default-password: nimda
+
+management:
+  health:
+    mail:
+      enabled: false
